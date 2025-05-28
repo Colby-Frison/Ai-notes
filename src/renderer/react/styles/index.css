@@ -1,0 +1,15 @@
+/* 
+ * React Components Styles
+ * This file contains styles specific to React components 
+ */
+
+/* Import existing styles */
+@import '../../styles/main.css';
+@import '../../styles/sidebar.css';
+@import '../../styles/workspace.css';
+@import '../../styles/chat.css';
+
+/* Additional styles for React components */
+.react-specific {
+  /* These would be styles specific to React implementation */
+} 

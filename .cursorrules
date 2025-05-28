@@ -1,0 +1,70 @@
+# Cursor AI Development Rules
+
+## Project Context
+You are working on an Electron-based note-taking application with AI chat integration. This is a desktop application that prioritizes security, performance, and user experience.
+
+## Core Development Principles
+
+### 1. Security First
+- NEVER expose Node.js APIs directly to renderer processes
+- ALWAYS use `contextBridge` and `preload.js` for secure IPC communication
+- ENCRYPT all sensitive data including API keys using OS credential stores
+- VALIDATE all file paths to prevent directory traversal attacks
+- SANITIZE all user inputs and API responses before processing
+- IMPLEMENT strict Content Security Policy (CSP) headers
+- Set `contextIsolation: true` and `nodeIntegration: false` in all BrowserWindow configurations
+
+### 2. Error Handling Standards
+- NEVER ignore errors or use empty catch blocks
+- ALWAYS wrap async operations in try-catch blocks
+- PROVIDE user-friendly error messages with actionable solutions
+- LOG errors with sufficient context for debugging
+- IMPLEMENT graceful degradation when features fail
+- VALIDATE all inputs at boundaries (IPC, API, file operations)
+
+### 3. Performance Requirements
+- STREAM large files instead of loading into memory
+- IMPLEMENT lazy loading for file trees and content
+- CLEANUP event listeners, timers, and resources when components unmount
+- DEBOUNCE user input operations (search, auto-save)
+- CACHE frequently accessed data with proper invalidation
+- LIMIT concurrent operations to prevent resource exhaustion
+
+## Code Organization Rules
+
+### File Structure Standards
+```
+src/
+├── main/              # Main process code
+│   ├── window-manager.js
+│   ├── file-system.js
+│   ├── config-manager.js
+│   └── menu.js
+├── renderer/          # Renderer process code
+│   ├── index.html
+│   ├── styles/
+│   ├── scripts/
+│   └── components/
+├── backend/           # Express server
+│   ├── server.js
+│   ├── routes/
+│   └── services/
+└── preload.js         # IPC bridge
+```
+
+### Naming Conventions
+- Files/Directories: `kebab-case` (file-manager.js, ai-chat.js)
+- Functions/Variables: `camelCase` (getCurrentFile, isFileOpen)
+- Constants: `UPPER_SNAKE_CASE` (MAX_FILE_SIZE, API_TIMEOUT)
+- Classes: `PascalCase` (FileManager, ChatService)
+- IPC Channels: `kebab-case` with prefixes (file-open, config-get, ai-send-message)
+
+## UI/UX Development Rules
+
+### Accessibility Requirements
+- Ensure all interactive elements are keyboard accessible
+- Implement proper ARIA labels and roles
+- Maintain WCAG AA color contrast ratios
+- Provide alternative text for all images
+- Implement proper focus management in modals
+- Support screen readers with semantic HTML 

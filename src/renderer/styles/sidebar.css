@@ -1,0 +1,314 @@
+/* 
+ * Sidebar Styles 
+ * Styles for the sidebar, file tree, and AI chat components
+ */
+
+/* Sidebar Container */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: 200px;
+  max-width: 400px;
+  height: 100%;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-normal);
+  position: relative;
+  resize: horizontal;
+  overflow: hidden;
+}
+
+/* Collapsed Sidebar */
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+  min-width: var(--sidebar-collapsed-width);
+  resize: none;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: calc(-1 * var(--spacing-md));
+  width: 20px;
+  height: 40px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transform: translateX(50%);
+}
+
+.sidebar.collapsed .sidebar-toggle .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: transparent;
+  cursor: pointer;
+  color: var(--text);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background-color: var(--primary);
+  opacity: 0.1;
+  transition: width var(--transition-normal);
+}
+
+.sidebar-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-btn:active {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-btn.active {
+  background-color: rgba(0, 120, 212, 0.1);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.sidebar-btn.active::after {
+  width: 4px;
+}
+
+.sidebar-btn .icon {
+  margin-right: var(--spacing-md);
+  font-size: var(--font-size-lg);
+}
+
+/* Hide labels when sidebar is collapsed */
+.sidebar.collapsed .sidebar-btn .label {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-btn {
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-btn .icon {
+  margin-right: 0;
+}
+
+/* Sidebar Content */
+.sidebar-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar-panel {
+  display: none;
+  height: 100%;
+  flex-direction: column;
+}
+
+.sidebar-panel.active {
+  display: flex;
+}
+
+.panel-header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+/* Hide panel headers when sidebar is collapsed */
+.sidebar.collapsed .panel-header {
+  display: none;
+}
+
+/* File Tree */
+.file-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-fast);
+}
+
+.file-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.file-item.active {
+  background-color: rgba(0, 120, 212, 0.1);
+  color: var(--primary);
+}
+
+.file-item-icon {
+  margin-right: var(--spacing-sm);
+  font-size: var(--font-size-base);
+  width: 20px;
+  text-align: center;
+}
+
+.file-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-item {
+  margin-bottom: var(--spacing-xs);
+}
+
+.folder-children {
+  margin-left: var(--spacing-lg);
+  border-left: 1px solid var(--border);
+  padding-left: var(--spacing-sm);
+}
+
+.folder-toggle {
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.folder-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+/* Hide file names when sidebar is collapsed */
+.sidebar.collapsed .file-tree {
+  display: none;
+}
+
+/* AI Chat */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.chat-message {
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  max-width: 90%;
+  word-break: break-word;
+}
+
+.chat-message.user {
+  align-self: flex-end;
+  background-color: var(--primary);
+  color: white;
+}
+
+.chat-message.ai {
+  align-self: flex-start;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.chat-timestamp {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+.chat-input-container {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.chat-input-container textarea {
+  width: 100%;
+  resize: none;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-sm);
+  background-color: var(--background);
+}
+
+.chat-send-btn {
+  align-self: flex-end;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.chat-send-btn:hover {
+  background-color: var(--accent);
+}
+
+/* Hide chat when sidebar is collapsed */
+.sidebar.collapsed .chat-messages,
+.sidebar.collapsed .chat-input-container {
+  display: none;
+}
+
+/* Settings Preview */
+.settings-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.settings-preview p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+/* Hide settings preview when sidebar is collapsed */
+.sidebar.collapsed .settings-preview {
+  display: none;
+} 

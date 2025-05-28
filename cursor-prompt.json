@@ -1,0 +1,705 @@
+"development_priorities" : {
+    "phase_1_foundation": {
+      "milestone": "Basic app structure and navigation",
+      "tasks": [
+        "Set up Electron app with security best practices",
+        "Create main window with proper sizing and controls",
+        "Implement collapsible sidebar with three-button navigation",
+        "Basic file tree with root directory selection and persistence",
+        "Simple text file opening in main workspace",
+        "Implement tab system for multiple open files"
+      ],
+      "success_criteria": "User can select directory, browse files, and open text files in tabs"
+    },
+    "phase_2_core_features": {
+      "milestone": "File viewing and editing capabilities",
+      "tasks": [
+        "Implement markdown editor with edit/preview/split modes",
+        "Add PDF rendering with PDF.js integration",
+        "Image display with zoom and fit controls",
+        "File watching and auto-refresh functionality",
+        "Basic settings modal with theme switching",
+        "Keyboard shortcuts and accessibility features"
+      ],
+      "success_criteria": "User can effectively view and edit all supported file types"
+    },
+    "phase_3_ai_integration": {
+      "milestone": "AI chat functionality",
+      "tasks": [
+        "Set up Express backend server as child process",
+        "Implement Gemini API integration with error handling",
+        "Create chat interface with message history",
+        "Add context-aware features (current file integration)",
+        "Implement streaming responses and loading states",
+        "Add API key management in settings"
+      ],
+      "success_criteria": "User can have productive conversations with AI about their files"
+    },
+    "phase_4_polish_and_optimization": {
+      "milestone": "Production-ready application",
+      "tasks": [
+        "Performance optimization and memory management",
+        "Comprehensive error handling and user feedback",
+        "Advanced settings and customization options",
+        "Auto-updater implementation",
+        "Comprehensive testing and bug fixes",
+        "Application packaging and distribution setup"{
+  "project_overview": {
+    "name": "AI-Assisted Note Taking Application",
+    "framework": "Electron",
+    "description": "A minimal, efficient note-taking application with AI chat integration, file management, and markdown editing capabilities"
+  },
+  "core_requirements": {
+    "application_type": "Electron desktop application",
+    "architecture": "Main process + Renderer process with IPC communication",
+    "ui_framework": "HTML/CSS/JavaScript (vanilla or React - optimize for performance)",
+    "backend_integration": "Node.js backend for Gemini API integration"
+  },
+  "detailed_specifications": {
+    "main_window": {
+      "layout": "Single window application with workspace-focused design",
+      "pages": "Minimal page count - primary workspace + modal overlays",
+      "responsive": "Fixed desktop layout optimized for productivity",
+      "dimensions": {
+        "min_width": "1000px",
+        "min_height": "700px",
+        "default_size": "1200x800px"
+      },
+      "window_controls": {
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "show_menu_bar": false
+      }
+    },
+    "left_sidebar": {
+      "behavior": "Collapsible sidebar menu",
+      "dimensions": {
+        "default_width": "280px",
+        "collapsed_width": "50px",
+        "min_width": "200px",
+        "max_width": "400px",
+        "resizable": true
+      },
+      "buttons": [
+        {
+          "name": "File Tree",
+          "icon": "folder icon",
+          "functionality": "Display directory structure and file navigation",
+          "keyboard_shortcut": "Ctrl+Shift+E"
+        },
+        {
+          "name": "AI Chat",
+          "icon": "chat/brain icon", 
+          "functionality": "Gemini API chat interface",
+          "keyboard_shortcut": "Ctrl+Shift+A"
+        },
+        {
+          "name": "Settings",
+          "icon": "gear/cog icon",
+          "functionality": "Open settings modal window",
+          "keyboard_shortcut": "Ctrl+,"
+        }
+      ],
+      "content_switching": "Same content area shared between File Tree and AI Chat based on active button",
+      "collapse_toggle": {
+        "keyboard_shortcut": "Ctrl+B",
+        "button_location": "Top of sidebar",
+        "animation": "Smooth 200ms transition"
+      }
+    },
+    "file_system_management": {
+      "root_directory_selection": {
+        "initial_state": "Prompt user to select root directory if none exists",
+        "storage": "Save selected directory path in dot file (.notes-config.json)",
+        "persistence": "Remember root directory across application restarts",
+        "dialog_options": {
+          "properties": ["openDirectory", "createDirectory"],
+          "title": "Select Notes Directory",
+          "button_label": "Select Folder"
+        },
+        "validation": {
+          "check_permissions": "Verify read/write access to selected directory",
+          "create_if_missing": "Offer to create directory if it doesn't exist",
+          "handle_network_drives": "Warn about potential performance issues"
+        }
+      },
+      "file_tree_display": {
+        "content": "Show folders and files from root directory",
+        "interaction": "Clickable files to open in main workspace",
+        "supported_file_types": {
+          "documents": [".md", ".txt", ".rtf"],
+          "pdfs": [".pdf"],
+          "images": [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"],
+          "code": [".js", ".ts", ".html", ".css", ".json", ".xml", ".yml", ".yaml"],
+          "ignore_patterns": [".git", "node_modules", ".DS_Store", "Thumbs.db", "*.tmp", "*.temp"]
+        },
+        "folder_expansion": "Collapsible folder structure with state persistence",
+        "sorting": {
+          "order": "Folders first, then files alphabetically",
+          "case_insensitive": true
+        },
+        "context_menu": {
+          "file_options": ["Open", "Rename", "Delete", "Copy Path"],
+          "folder_options": ["New File", "New Folder", "Rename", "Delete", "Reveal in Explorer"]
+        },
+        "drag_drop": {
+          "internal": "Support file moving within tree",
+          "external": "Accept files dropped from OS file manager"
+        }
+      },
+      "file_watching": {
+        "monitor_changes": "Watch for external file modifications",
+        "refresh_tree": "Auto-refresh file tree when files added/removed",
+        "unsaved_changes_warning": "Warn if open file modified externally"
+      }
+    },
+    "main_workspace": {
+      "layout": {
+        "tab_system": "Support multiple open files with closeable tabs",
+        "tab_management": {
+          "max_tabs": 10,
+          "close_shortcuts": "Ctrl+W, middle-click",
+          "switch_shortcuts": "Ctrl+Tab, Ctrl+1-9",
+          "unsaved_indicator": "Show asterisk (*) for modified files"
+        }
+      },
+      "file_rendering": {
+        "pdf_support": {
+          "library": "PDF.js",
+          "features": ["Text selection", "Zoom controls", "Page navigation", "Search within PDF"],
+          "toolbar": "Minimal PDF controls (zoom, page nav, search)",
+          "text_layer": "Enable text selection and copying",
+          "performance": "Lazy load pages for large PDFs"
+        },
+        "image_support": {
+          "formats": ["PNG", "JPG", "JPEG", "GIF", "SVG", "WebP", "BMP", "ICO"],
+          "features": ["Zoom controls", "Fit to window", "Actual size", "Rotate"],
+          "max_size": "Handle large images efficiently",
+          "metadata": "Display basic image info (dimensions, file size)"
+        },
+        "markdown_support": {
+          "modes": {
+            "edit": "Full markdown editor with syntax highlighting",
+            "preview": "Rendered HTML view",
+            "split": "Side-by-side edit and preview"
+          },
+          "editor_features": {
+            "syntax_highlighting": "Highlight **bold**, *italic*, ==highlight==, # headings, etc.",
+            "line_numbers": true,
+            "word_wrap": true,
+            "auto_complete": "Basic markdown syntax completion",
+            "bracket_matching": "Match markdown pairs",
+            "indent_guides": true
+          },
+          "supported_syntax": {
+            "basic": ["**bold**", "*italic*", "==highlight==", "~~strikethrough~~"],
+            "headings": ["# H1", "## H2", "### H3", "#### H4", "##### H5", "###### H6"],
+            "lists": ["- bullets", "1. numbered", "- [ ] checkboxes"],
+            "code": ["`inline code`", "```code blocks```"],
+            "links": ["[text](url)", "![images](path)"],
+            "tables": "GitHub-flavored markdown tables",
+            "math": "KaTeX math rendering ($math$)"
+          },
+          "live_preview": "Real-time rendering in split/preview mode with scroll sync",
+          "auto_save": "Auto-save every 30 seconds or on focus loss"
+        },
+        "text_files": {
+          "encoding": "UTF-8 with BOM detection",
+          "line_endings": "Preserve original line endings (CRLF/LF)",
+          "large_files": "Stream large files to prevent memory issues"
+        }
+      },
+      "empty_state": {
+        "message": "Welcome to your workspace",
+        "actions": ["Select root directory", "Create new file", "Open recent file"]
+      }
+    },
+    "ai_chat_integration": {
+      "api": "Google Gemini API",
+      "architecture": "Frontend → Backend → Gemini API",
+      "backend_requirements": {
+        "framework": "Express.js server (runs as child process from Electron main)",
+        "port": "Dynamic port selection with fallback options",
+        "endpoints": {
+          "chat": "POST /api/chat - Send messages to Gemini",
+          "history": "GET /api/history - Retrieve chat history",
+          "clear": "DELETE /api/history - Clear chat history",
+          "health": "GET /api/health - Check API connectivity"
+        },
+        "api_key_management": {
+          "storage": "Encrypted storage in user settings",
+          "validation": "Test API key before saving",
+          "environment": "Support .env file for development"
+        },
+        "response_handling": {
+          "streaming": "Support streaming responses for better UX",
+          "rate_limiting": "Handle Gemini API rate limits gracefully",
+          "timeout": "30 second timeout with user notification"
+        },
+        "error_handling": {
+          "network_errors": "Retry logic with exponential backoff",
+          "api_errors": "User-friendly error messages",
+          "quota_exceeded": "Clear messaging about limits"
+        }
+      },
+      "frontend_chat": {
+        "interface": {
+          "layout": "Chat bubble design with clear user/AI distinction",
+          "colors": "Different background colors for user vs AI messages",
+          "timestamps": "Show time for each message",
+          "message_actions": ["Copy text", "Regenerate response"]
+        },
+        "input": {
+          "text_area": "Multi-line input with auto-resize",
+          "shortcuts": "Enter to send, Shift+Enter for new line",
+          "character_limit": "Display character count near limits",
+          "file_context": "Option to include current file content in query"
+        },
+        "conversation_management": {
+          "history_persistence": "Save chat history to local file",
+          "conversation_clearing": "Button to clear current conversation",
+          "export_options": "Export chat as markdown or text file",
+          "search": "Search within chat history"
+        },
+        "loading_states": {
+          "sending": "Show 'Sending...' state",
+          "thinking": "Animated typing indicator for AI responses",
+          "error": "Clear error states with retry options"
+        },
+        "context_awareness": {
+          "file_integration": "Send current file content as context",
+          "selection_integration": "Send selected text as context",
+          "workspace_context": "Include file tree structure if relevant"
+        }
+      }
+    },
+    "settings_modal": {
+      "design": {
+        "type": "Modal overlay window",
+        "size": "600x400px",
+        "position": "Center of main window",
+        "backdrop": "Semi-transparent overlay with click-to-close"
+      },
+      "navigation": {
+        "tabs": ["General", "Editor", "AI", "Advanced"],
+        "keyboard_navigation": "Tab key support for all controls"
+      },
+      "settings_categories": {
+        "general": {
+          "theme": {
+            "options": ["Light", "Dark", "System"],
+            "preview": "Live theme preview"
+          },
+          "language": "UI language selection (placeholder)",
+          "startup": {
+            "remember_workspace": "Reopen last workspace on startup",
+            "check_updates": "Check for updates on startup"
+          }
+        },
+        "editor": {
+          "font_family": "Font selection dropdown",
+          "font_size": "Slider with preview (12-24px)",
+          "tab_size": "Tab width in spaces (2, 4, 8)",
+          "word_wrap": "Enable/disable word wrapping",
+          "auto_save": "Auto-save interval selection",
+          "vim_mode": "Enable Vim keybindings (placeholder)"
+        },
+        "ai": {
+          "api_key": {
+            "input": "Password field for Gemini API key",
+            "test_button": "Test API connectivity",
+            "status_indicator": "Show connection status"
+          },
+          "model_settings": {
+            "temperature": "Response creativity slider (0-1)",
+            "max_tokens": "Maximum response length",
+            "system_prompt": "Custom system instructions"
+          },
+          "context": {
+            "include_file_content": "Auto-include current file in queries",
+            "context_window": "How much file content to include"
+          }
+        },
+        "advanced": {
+          "performance": {
+            "hardware_acceleration": "Enable/disable GPU acceleration",
+            "memory_limit": "Maximum memory usage for large files"
+          },
+          "privacy": {
+            "telemetry": "Usage analytics (disabled by default)",
+            "crash_reports": "Automatic crash reporting"
+          },
+          "developer": {
+            "debug_mode": "Enable developer console",
+            "verbose_logging": "Detailed logging for troubleshooting"
+          }
+        }
+      },
+      "close_behavior": {
+        "methods": ["Click outside modal", "ESC key", "X button", "Cancel button"],
+        "save_options": ["Save", "Cancel", "Apply"],
+        "unsaved_changes": "Warn before closing with unsaved changes"
+      }
+    }
+  },
+  "technical_implementation_guidance": {
+    "project_structure": {
+      "root_files": [
+        "package.json - Dependencies and scripts",
+        "main.js - Electron main process entry point",
+        "preload.js - Secure IPC bridge",
+        ".gitignore - Exclude node_modules, dist, user data",
+        "README.md - Setup and usage instructions"
+      ],
+      "directories": {
+        "src/": {
+          "main/ - Main process code": [
+            "window-manager.js - Window creation and management",
+            "file-system.js - File operations and watching",
+            "config-manager.js - User settings persistence",
+            "menu.js - Application menu setup"
+          ],
+          "renderer/ - Renderer process code": [
+            "index.html - Main window HTML",
+            "styles/ - CSS stylesheets",
+            "scripts/ - Frontend JavaScript modules",
+            "components/ - Reusable UI components"
+          ],
+          "backend/ - Express server": [
+            "server.js - Express server setup",
+            "routes/ - API route handlers",
+            "services/ - Gemini API integration"
+          ]
+        },
+        "assets/ - Icons, images, static files",
+        "build/ - Build configuration and scripts",
+        "dist/ - Built application output"
+      }
+    },
+    "electron_setup": {
+      "main_process": {
+        "responsibilities": ["Window management", "File system operations", "Backend server lifecycle", "System integration"],
+        "key_modules": ["electron", "path", "fs/promises", "child_process"],
+        "security": {
+          "context_isolation": true,
+          "node_integration": false,
+          "sandbox": true,
+          "content_security_policy": "Strict CSP with allowed sources"
+        }
+      },
+      "renderer_process": {
+        "responsibilities": ["UI rendering", "User interactions", "File content display"],
+        "communication": "Use contextBridge for secure IPC",
+        "limitations": "No direct Node.js access - all file ops through IPC"
+      },
+      "ipc_communication": {
+        "channels": {
+          "file-operations": "open-file, save-file, get-directory-contents",
+          "config-management": "get-config, set-config, reset-config",
+          "window-controls": "minimize, maximize, close, toggle-sidebar",
+          "ai-chat": "send-message, get-history, clear-history"
+        },
+        "error_handling": "All IPC calls should have error responses",
+        "data_validation": "Validate all data passed through IPC"
+      }
+    },
+    "dependency_management": {
+      "production_dependencies": {
+        "electron": "Latest stable version",
+        "express": "Backend server framework",
+        "ws": "WebSocket support for real-time features",
+        "chokidar": "File system watching",
+        "marked": "Markdown parsing",
+        "highlight.js": "Syntax highlighting",
+        "katex": "Math equation rendering",
+        "pdf.js-dist": "PDF rendering",
+        "node-fetch": "HTTP requests to Gemini API"
+      },
+      "development_dependencies": {
+        "electron-builder": "Application packaging",
+        "eslint": "Code linting",
+        "prettier": "Code formatting",
+        "nodemon": "Development server auto-restart"
+      },
+      "version_pinning": "Pin major versions to prevent breaking changes",
+      "security_updates": "Regular dependency audits and updates"
+    },
+    "file_handling": {
+      "pdf_rendering": {
+        "library": "PDF.js",
+        "implementation": "Use PDF.js viewer component",
+        "text_layer": "Enable text selection and search",
+        "performance": "Implement page-based loading for large files",
+        "memory_management": "Cleanup PDF instances when switching files"
+      },
+      "image_display": {
+        "formats": "Support all common formats via native HTML img",
+        "scaling": "CSS object-fit for proper aspect ratio",
+        "zoom": "Implement zoom with CSS transforms",
+        "large_images": "Lazy loading and memory-efficient display"
+      },
+      "markdown_processing": {
+        "parser": "Use marked.js with custom renderer",
+        "syntax_highlighting": "Integrate highlight.js for code blocks",
+        "math_rendering": "KaTeX for LaTeX math expressions",
+        "sanitization": "Sanitize HTML output for security",
+        "extensions": "Support GitHub-flavored markdown features"
+      },
+      "file_watching": {
+        "library": "chokidar for cross-platform file watching",
+        "events": "Watch for add, change, unlink events",
+        "throttling": "Debounce rapid file changes",
+        "exclusions": "Ignore system files and temp files"
+      },
+      "encoding_detection": {
+        "utf8_bom": "Handle UTF-8 with BOM",
+        "fallback": "Default to UTF-8 for unknown encodings",
+        "binary_detection": "Detect and handle binary files gracefully"
+      }
+    },
+    "state_management": {
+      "application_state": {
+        "current_file": "Path and metadata of currently opened file",
+        "open_tabs": "Array of open file tabs with unsaved status",
+        "sidebar_state": "Collapsed/expanded state and active panel",
+        "workspace_layout": "Panel sizes and positions",
+        "recent_files": "List of recently opened files (max 10)"
+      },
+      "persistence": {
+        "config_file": ".notes-config.json in user home directory",
+        "auto_save": "Save state changes immediately",
+        "backup": "Keep backup of previous config",
+        "migration": "Handle config format changes between versions"
+      },
+      "session_state": {
+        "chat_history": "Temporary chat history (not persisted)",
+        "file_changes": "Track unsaved changes per file",
+        "search_state": "Current search terms and results"
+      }
+    },
+    "performance_optimization": {
+      "file_loading": {
+        "lazy_loading": "Load file content only when needed",
+        "streaming": "Stream large files in chunks",
+        "caching": "Cache recently accessed files in memory",
+        "background_loading": "Preload files when switching tabs"
+      },
+      "ui_performance": {
+        "virtual_scrolling": "For large file trees and chat history",
+        "debouncing": "Debounce search and auto-save operations",
+        "animation_optimization": "Use CSS transforms for smooth animations",
+        "memory_cleanup": "Cleanup unused components and listeners"
+      },
+      "backend_performance": {
+        "connection_pooling": "Reuse HTTP connections for API calls",
+        "request_queuing": "Queue API requests to handle rate limits",
+        "response_caching": "Cache appropriate API responses",
+        "graceful_degradation": "Handle API failures gracefully"
+      }
+    },
+    "styling_recommendations": {
+      "design_system": {
+        "philosophy": "Clean, minimal interface focusing on content readability",
+        "inspiration": "VS Code, Obsidian, Notion for reference",
+        "consistency": "Unified spacing, typography, and color usage"
+      },
+      "color_scheme": {
+        "light_theme": {
+          "background": "#ffffff",
+          "surface": "#f8f9fa",
+          "primary": "#007acc",
+          "text": "#24292e",
+          "text_secondary": "#6a737d",
+          "border": "#e1e4e8",
+          "accent": "#0366d6"
+        },
+        "dark_theme": {
+          "background": "#1e1e1e",
+          "surface": "#252526",
+          "primary": "#0078d4",
+          "text": "#cccccc",
+          "text_secondary": "#969696",
+          "border": "#3c3c3c",
+          "accent": "#4fc3f7"
+        }
+      },
+      "typography": {
+        "font_families": {
+          "ui": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+          "code": "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+          "content": "'Inter', system-ui, sans-serif"
+        },
+        "font_sizes": {
+          "xs": "0.75rem",
+          "sm": "0.875rem",
+          "base": "1rem",
+          "lg": "1.125rem",
+          "xl": "1.25rem",
+          "2xl": "1.5rem"
+        },
+        "line_heights": {
+          "tight": "1.25",
+          "normal": "1.5",
+          "relaxed": "1.75"
+        }
+      },
+      "spacing": {
+        "scale": "4px base unit (4, 8, 12, 16, 20, 24, 32, 40, 48, 64px)",
+        "component_padding": "12px minimum for interactive elements",
+        "section_margins": "24px between major sections"
+      },
+      "animations": {
+        "duration": {
+          "fast": "150ms",
+          "normal": "250ms",
+          "slow": "350ms"
+        },
+        "easing": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "reduced_motion": "Respect user's reduced motion preferences"
+      },
+      "responsive_elements": {
+        "sidebar_breakpoint": "Collapse sidebar below 1024px width",
+        "touch_targets": "Minimum 44px for touch interfaces",
+        "keyboard_focus": "Clear focus indicators for all interactive elements"
+      }
+    },
+  },
+  "development_priorities": {
+    "phase_1": [
+      "Basic Electron app setup with main window",
+      "Sidebar navigation with button switching",
+      "File tree implementation with root directory selection",
+      "Basic file opening (text files first)"
+    ],
+    "phase_2": [
+      "Markdown editor with edit/preview/split modes",
+      "PDF rendering integration", 
+      "Image display functionality",
+      "Settings modal implementation"
+    ],
+    "phase_3": [
+      "Backend server setup for Gemini API",
+      "AI chat interface and integration",
+      "File system persistence and configuration",
+      "Polish and error handling"
+    ]
+  },
+  "coding_standards": {
+    "code_organization": {
+      "modular_structure": "Single responsibility principle for all modules",
+      "separation_of_concerns": "Clear boundaries between UI, business logic, and data",
+      "dependency_injection": "Avoid tight coupling between components",
+      "configuration_management": "Centralized config handling with validation"
+    },
+    "naming_conventions": {
+      "files": "kebab-case for files and directories",
+      "functions": "camelCase for functions and variables",
+      "constants": "UPPER_SNAKE_CASE for constants",
+      "classes": "PascalCase for classes and constructors",
+      "ipc_channels": "kebab-case with descriptive prefixes (file-open, config-get)"
+    },
+    "error_handling": {
+      "async_operations": "Always use try-catch for async operations",
+      "error_propagation": "Proper error bubbling with context information",
+      "user_feedback": "Convert technical errors to user-friendly messages",
+      "logging": "Structured logging with appropriate levels (error, warn, info, debug)"
+    },
+    "performance": {
+      "memory_management": "Explicit cleanup of event listeners and resources",
+      "async_patterns": "Use async/await consistently, avoid callback hell",
+      "efficient_algorithms": "Consider performance for large file operations",
+      "caching_strategy": "Implement intelligent caching for frequently accessed data"
+    },
+    "accessibility": {
+      "keyboard_navigation": "Full keyboard accessibility for all features",
+      "screen_reader_support": "Proper ARIA labels and semantic HTML",
+      "focus_management": "Logical tab order and visible focus indicators",
+      "color_contrast": "WCAG AA compliance for all text and UI elements"
+    },
+    "documentation": {
+      "code_comments": "Clear comments for complex logic and business rules",
+      "api_documentation": "Document all IPC channels and backend endpoints",
+      "readme_files": "Comprehensive setup and contribution guides",
+      "inline_documentation": "JSDoc comments for public functions and classes"
+    }
+  },
+  "platform_specific_considerations": {
+    "windows": {
+      "file_paths": "Handle Windows path separators and drive letters",
+      "installer": "NSIS installer with proper registry entries",
+      "system_integration": "Windows context menu integration for supported files",
+      "permissions": "Handle Windows UAC and file permissions properly"
+    },
+    "macos": {
+      "app_bundle": "Proper .app bundle structure with Info.plist",
+      "menu_bar": "macOS-style menu bar integration",
+      "dock_integration": "Dock icon badge for notifications",
+      "sandboxing": "Mac App Store sandboxing compatibility"
+    },
+    "linux": {
+      "desktop_integration": ".desktop file for application launcher",
+      "package_formats": "Support for multiple package managers",
+      "theme_integration": "Respect system theme and dark mode preferences",
+      "file_permissions": "Handle Linux file permissions and ownership"
+    }
+  },
+  "specific_instructions_for_ai": {
+    "development_approach": {
+      "incremental_building": "Build and test each feature before moving to the next",
+      "error_first_thinking": "Consider error cases before implementing happy path",
+      "user_experience_focus": "Prioritize smooth, intuitive interactions",
+      "performance_consciousness": "Consider performance implications of all decisions"
+    },
+    "code_quality_expectations": {
+      "clean_code": "Write self-documenting code with meaningful variable names",
+      "consistent_formatting": "Use Prettier for consistent code formatting",
+      "error_handling": "Never ignore errors - always handle or propagate appropriately",
+      "testing_mindset": "Write testable code with clear inputs and outputs"
+    },
+    "technology_stack_decisions": {
+      "prefer_established": "Choose mature, well-maintained libraries over cutting-edge",
+      "minimize_dependencies": "Only add dependencies that provide significant value",
+      "security_first": "Always consider security implications of library choices",
+      "cross_platform": "Ensure all choices work consistently across target platforms"
+    },
+    "implementation_priorities": {
+      "functionality_first": "Get core features working before adding polish",
+      "user_feedback": "Implement user feedback mechanisms early",
+      "graceful_degradation": "Ensure app remains usable when components fail",
+      "data_integrity": "Never lose user data, always validate and backup"
+    },
+    "debugging_and_troubleshooting": {
+      "logging_strategy": "Implement comprehensive logging from the start",
+      "error_reproduction": "Make errors reproducible with clear steps",
+      "diagnostic_tools": "Include diagnostic information in error reports",
+      "user_support": "Provide clear paths for users to get help"
+    }
+  },
+  "common_pitfalls_to_avoid": {
+    "electron_specific": {
+      "memory_leaks": "Always cleanup event listeners and child processes",
+      "security_vulnerabilities": "Never expose Node.js APIs directly to renderer",
+      "update_mechanisms": "Implement proper update strategies to avoid breaking changes",
+      "platform_differences": "Test file path handling across different operating systems"
+    },
+    "api_integration": {
+      "rate_limiting": "Implement proper rate limiting to avoid API bans",
+      "error_cascading": "Don't let API errors crash the entire application",
+      "dependency_on_external": "Have fallback behavior when external services fail",
+      "api_key_exposure": "Never log or expose API keys in client-side code"
+    },
+    "file_handling": {
+      "large_files": "Stream large files instead of loading entirely into memory",
+      "file_locking": "Handle file locks and concurrent access properly",
+      "encoding_issues": "Always specify file encoding explicitly",
+      "path_traversal": "Validate all file paths to prevent security vulnerabilities"
+    },
+    "user_interface": {
+      "blocking_operations": "Never block the UI thread with long-running operations",
+      "state_synchronization": "Keep UI state synchronized with application state",
+      "accessibility_oversights": "Test with keyboard-only navigation regularly",
+      "responsive_design": "Test on different screen sizes and resolutions"
+    }
+  }
+}

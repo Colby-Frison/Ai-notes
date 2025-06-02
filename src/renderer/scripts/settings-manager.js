@@ -42,11 +42,16 @@ export class SettingsManager {
     try {
       // Load each setting individually
       for (const key in this.settings) {
-        const value = await window.electronAPI.getConfig(key);
-        
-        // Only update if the value exists and is not undefined
-        if (value !== undefined) {
-          this.settings[key] = value;
+        try {
+          const value = await window.electronAPI.getConfig(key);
+          
+          // Only update if the value exists and is not undefined
+          if (value !== undefined) {
+            this.settings[key] = value;
+          }
+        } catch (error) {
+          console.error(`Error loading setting '${key}':`, error);
+          // Continue with default value for this setting
         }
       }
       
@@ -188,6 +193,12 @@ export class SettingsManager {
    * Populate the settings form with current values
    */
   populateSettingsForm() {
+    // Check if the settings form exists in the DOM
+    if (!document.getElementById('settings-modal')) {
+      console.log('Settings form not found - skipping populateSettingsForm');
+      return;
+    }
+    
     // General settings
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
@@ -288,6 +299,11 @@ export class SettingsManager {
    * Set up range input live updates
    */
   setupRangeInputs() {
+    // Check if the settings form exists in the DOM
+    if (!document.getElementById('settings-modal')) {
+      return;
+    }
+    
     // Font size range
     const fontSize = document.getElementById('font-size');
     const fontSizeValue = document.getElementById('font-size-value');

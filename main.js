@@ -64,6 +64,18 @@ async function createWindow() {
     slashes: true
   }));
 
+  // Add this code to enable React DevTools if in development mode
+  if (isDevMode) {
+    try {
+      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
+      installExtension(REACT_DEVELOPER_TOOLS)
+        .then((name) => console.log(`Added Extension: ${name}`))
+        .catch((err) => console.log('An error occurred: ', err));
+    } catch (e) {
+      console.error('React DevTools failed to install:', e);
+    }
+  }
+
   // Show window when ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -231,6 +243,19 @@ ipcMain.handle('fs:readFile', async (event, filePath) => {
       return { error: 'Path traversal attempt detected' };
     }
     
+    // Check if file exists
+    try {
+      const stats = await fs.stat(filePath);
+      if (!stats.isFile()) {
+        return { error: 'Not a file' };
+      }
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return { error: 'File does not exist' };
+      }
+      throw err; // Re-throw other errors
+    }
+    
     const content = await fs.readFile(filePath, 'utf8');
     return { content };
   } catch (error) {
@@ -277,12 +302,22 @@ ipcMain.handle('fs:saveFile', async (event, filePath, content) => {
 
 // Config Management
 ipcMain.handle('config:get', (event, key) => {
-  return store.get(key);
+  try {
+    return store.get(key);
+  } catch (error) {
+    console.error(`Error getting config value for key "${key}":`, error);
+    return null;
+  }
 });
 
 ipcMain.handle('config:set', (event, key, value) => {
-  store.set(key, value);
-  return true;
+  try {
+    store.set(key, value);
+    return { success: true };
+  } catch (error) {
+    console.error(`Error setting config value for key "${key}":`, error);
+    return { error: error.message };
+  }
 });
 
 // UI Helpers

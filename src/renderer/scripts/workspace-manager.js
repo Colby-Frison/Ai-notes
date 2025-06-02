@@ -5,15 +5,27 @@
  * and file content rendering.
  */
 
+import { updateMarkdownPreview, renderMarkdown } from './markdown-renderer.js';
+
 export class WorkspaceManager {
   constructor() {
+    console.warn('WorkspaceManager (JS version) initializing - this will be replaced by React components');
+    
+    // Get DOM elements with null checks
     this.tabsBar = document.getElementById('tabs-bar');
     this.contentArea = document.getElementById('content-area');
+    
+    // Initialize state
     this.openFiles = [];
     this.activeFile = null;
     
-    this.loadOpenFiles();
-    this.setupEventListeners();
+    // Only proceed with initialization if DOM elements exist
+    if (this.tabsBar && this.contentArea) {
+      this.loadOpenFiles();
+      this.setupEventListeners();
+    } else {
+      console.warn('Tabs bar or content area not found in DOM - React may be handling these elements');
+    }
   }
   
   /**
@@ -21,12 +33,50 @@ export class WorkspaceManager {
    */
   async loadOpenFiles() {
     try {
+      // Check if required DOM elements exist
+      if (!this.tabsBar || !this.contentArea) {
+        console.warn('Cannot load open files: DOM elements not found');
+        return;
+      }
+      
+      // Check if electronAPI is available
+      if (!window.electronAPI) {
+        console.error('Electron API not available');
+        return;
+      }
+      
       const savedOpenFiles = await window.electronAPI.getConfig('openFiles');
       
       if (savedOpenFiles && Array.isArray(savedOpenFiles) && savedOpenFiles.length > 0) {
+        // Get root directory
+        const rootDir = await window.electronAPI.getConfig('rootDirectory');
+        if (!rootDir) {
+          console.warn('No root directory set - skipping file loading');
+          return;
+        }
+        
+        // Normalize root dir for path comparison
+        const normalizedRootDir = rootDir.replace(/\\/g, '/');
+        
+        // Filter files to only include those in the root directory
+        const validFiles = savedOpenFiles.filter(path => {
+          const normalizedPath = path.replace(/\\/g, '/');
+          return normalizedPath.startsWith(normalizedRootDir);
+        });
+        
+        if (validFiles.length === 0) {
+          console.warn('No valid files found in root directory');
+          return;
+        }
+        
         // Open each file that was previously open
-        for (const filePath of savedOpenFiles) {
-          await this.openFile(filePath, false); // Don't activate each file
+        for (const filePath of validFiles) {
+          try {
+            await this.openFile(filePath, false); // Don't activate each file
+          } catch (error) {
+            console.error(`Error opening file ${filePath}:`, error);
+            // Continue with next file
+          }
         }
         
         // Activate the last active file
@@ -37,6 +87,8 @@ export class WorkspaceManager {
           // If last active file doesn't exist, activate the first open file
           await this.activateFile(this.openFiles[0].path);
         }
+      } else {
+        console.log('No saved open files found');
       }
     } catch (error) {
       console.error('Error loading open files:', error);
@@ -48,6 +100,12 @@ export class WorkspaceManager {
    */
   async saveOpenFiles() {
     try {
+      // Check if electronAPI is available
+      if (!window.electronAPI) {
+        console.error('Electron API not available');
+        return;
+      }
+      
       const openFilePaths = this.openFiles.map(file => file.path);
       await window.electronAPI.setConfig('openFiles', openFilePaths);
       
@@ -66,6 +124,26 @@ export class WorkspaceManager {
    */
   async openFile(filePath, activate = true) {
     try {
+      // Check if required DOM elements exist
+      if (!this.tabsBar || !this.contentArea) {
+        console.warn('Cannot open file: DOM elements not found');
+        
+        // Delegate to React bridge if available
+        if (window.reactBridge && window.reactBridge.workspace.openFile) {
+          console.log('Delegating file open to React bridge');
+          await window.reactBridge.workspace.openFile(filePath);
+          return;
+        }
+        
+        return;
+      }
+      
+      // Check if electronAPI is available
+      if (!window.electronAPI) {
+        console.error('Electron API not available');
+        return;
+      }
+      
       // Check if file is already open
       if (this.openFiles.some(file => file.path === filePath)) {
         if (activate) {
@@ -111,7 +189,11 @@ export class WorkspaceManager {
       
     } catch (error) {
       console.error('Error opening file:', error);
-      alert(`Error opening file: ${error.message}`);
+      
+      // Don't show alert if DOM elements are missing (likely React is handling it)
+      if (this.tabsBar && this.contentArea) {
+        alert(`Error opening file: ${error.message}`);
+      }
     }
   }
   
@@ -207,8 +289,11 @@ export class WorkspaceManager {
    * @returns {string} HTML for the markdown editor
    */
   createMarkdownEditor(fileObject) {
+    // Generate a unique ID for this markdown editor
+    const editorId = `markdown-editor-${Date.now()}`;
+    
     return `
-      <div class="editor-container" data-path="${fileObject.path}">
+      <div class="editor-container" data-path="${fileObject.path}" id="${editorId}">
         <div class="editor-toolbar">
           <button class="editor-mode-btn active" data-mode="edit">Edit</button>
           <button class="editor-mode-btn" data-mode="preview">Preview</button>
@@ -220,8 +305,7 @@ export class WorkspaceManager {
           </div>
           <div class="editor-mode preview-mode">
             <div class="markdown-content">
-              <!-- Markdown preview will be rendered here -->
-              <p>Preview not yet implemented</p>
+              ${renderMarkdown(fileObject.content)}
             </div>
           </div>
           <div class="editor-mode split-mode">
@@ -230,8 +314,7 @@ export class WorkspaceManager {
             </div>
             <div class="split-preview">
               <div class="markdown-content">
-                <!-- Markdown preview will be rendered here -->
-                <p>Preview not yet implemented</p>
+                ${renderMarkdown(fileObject.content)}
               </div>
             </div>
           </div>
@@ -271,6 +354,19 @@ export class WorkspaceManager {
    * @param {string} filePath - Path to the file to activate
    */
   async activateFile(filePath) {
+    // Check if required DOM elements exist
+    if (!this.tabsBar || !this.contentArea) {
+      console.warn('Cannot activate file: DOM elements not found');
+      
+      // Delegate to React bridge if available
+      if (window.reactBridge && window.reactBridge.workspace.openFile) {
+        console.log('Delegating file activation to React bridge');
+        await window.reactBridge.workspace.openFile(filePath);
+      }
+      
+      return;
+    }
+    
     // Update active file
     this.activeFile = filePath;
     
@@ -295,7 +391,13 @@ export class WorkspaceManager {
     });
     
     // Save active file to config
-    await window.electronAPI.setConfig('activeFile', filePath);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.setConfig('activeFile', filePath);
+      }
+    } catch (error) {
+      console.error('Error saving active file to config:', error);
+    }
     
     // Hide empty workspace if we have an active file
     const emptyWorkspace = this.contentArea.querySelector('.empty-workspace');
@@ -309,6 +411,19 @@ export class WorkspaceManager {
    * @param {string} filePath - Path to the file to close
    */
   async closeFile(filePath) {
+    // Check if required DOM elements exist
+    if (!this.tabsBar || !this.contentArea) {
+      console.warn('Cannot close file: DOM elements not found');
+      
+      // Delegate to React bridge if available
+      if (window.reactBridge && window.reactBridge.workspace.closeFile) {
+        console.log('Delegating file close to React bridge');
+        await window.reactBridge.workspace.closeFile(filePath);
+      }
+      
+      return;
+    }
+    
     // Check if file is modified and prompt to save
     const fileObject = this.openFiles.find(file => file.path === filePath);
     if (fileObject && fileObject.modified) {
@@ -352,13 +467,25 @@ export class WorkspaceManager {
     }
     
     // Save open files to config
-    await this.saveOpenFiles();
+    try {
+      if (window.electronAPI) {
+        await this.saveOpenFiles();
+      }
+    } catch (error) {
+      console.error('Error saving open files to config:', error);
+    }
   }
   
   /**
    * Set up event listeners for the workspace
    */
   setupEventListeners() {
+    // Check if required DOM elements exist
+    if (!this.tabsBar || !this.contentArea) {
+      console.warn('Cannot set up event listeners: DOM elements not found');
+      return;
+    }
+    
     // Use event delegation for tab clicks
     this.tabsBar.addEventListener('click', event => {
       // Handle close button clicks
@@ -390,6 +517,22 @@ export class WorkspaceManager {
           // Update file content
           fileObject.content = event.target.value;
           
+          // If this is a markdown file, update the preview in real-time
+          const editorContainer = event.target.closest('.editor-container');
+          if (editorContainer && fileObject.name.toLowerCase().endsWith('.md')) {
+            // Update preview content in both preview and split mode
+            const previewContent = editorContainer.querySelector('.preview-mode .markdown-content');
+            const splitPreviewContent = editorContainer.querySelector('.split-mode .split-preview .markdown-content');
+            
+            if (previewContent) {
+              updateMarkdownPreview(previewContent, fileObject.content);
+            }
+            
+            if (splitPreviewContent) {
+              updateMarkdownPreview(splitPreviewContent, fileObject.content);
+            }
+          }
+          
           // Mark as modified if not already
           if (!fileObject.modified) {
             fileObject.modified = true;
@@ -416,25 +559,44 @@ export class WorkspaceManager {
         const editorContainer = event.target.closest('.editor-container');
         
         if (editorContainer) {
+          // First, hide all editor modes
+          const modes = editorContainer.querySelectorAll('.editor-mode');
+          modes.forEach(modeElement => {
+            modeElement.classList.remove('active');
+          });
+          
+          // Then, activate the selected mode
+          const selectedMode = editorContainer.querySelector(`.${mode}-mode`);
+          if (selectedMode) {
+            selectedMode.classList.add('active');
+          }
+          
           // Update toolbar buttons
           const buttons = editorContainer.querySelectorAll('.editor-mode-btn');
           buttons.forEach(button => {
-            if (button === event.target) {
-              button.classList.add('active');
-            } else {
-              button.classList.remove('active');
-            }
+            button.classList.remove('active');
           });
+          event.target.classList.add('active');
           
-          // Update editor modes
-          const modes = editorContainer.querySelectorAll('.editor-mode');
-          modes.forEach(modeElement => {
-            if (modeElement.classList.contains(`${mode}-mode`)) {
-              modeElement.classList.add('active');
-            } else {
-              modeElement.classList.remove('active');
+          // If switching to preview or split mode, ensure the preview is up-to-date
+          if (mode === 'preview' || mode === 'split') {
+            const filePath = editorContainer.getAttribute('data-path');
+            const fileObject = this.openFiles.find(file => file.path === filePath);
+            
+            if (fileObject) {
+              let previewContent;
+              
+              if (mode === 'preview') {
+                previewContent = editorContainer.querySelector('.preview-mode .markdown-content');
+              } else {
+                previewContent = editorContainer.querySelector('.split-mode .split-preview .markdown-content');
+              }
+              
+              if (previewContent) {
+                updateMarkdownPreview(previewContent, fileObject.content);
+              }
             }
-          });
+          }
         }
       }
     });

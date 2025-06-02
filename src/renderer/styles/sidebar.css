@@ -161,7 +161,43 @@
   padding: var(--spacing-md);
 }
 
-.file-item {
+/* Folder toggle */
+.folder-toggle {
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+.folder-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.folder-toggle svg {
+  display: block;
+}
+
+/* File and folder icons */
+.file-item-icon {
+  margin-right: var(--spacing-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  width: 20px;
+}
+
+.file-item-icon svg {
+  display: block;
+}
+
+/* File items */
+.file-item, 
+.file-item-content {
   display: flex;
   align-items: center;
   padding: var(--spacing-xs) 0;
@@ -170,20 +206,14 @@
   transition: background-color var(--transition-fast);
 }
 
-.file-item:hover {
+.file-item:hover,
+.file-item-content:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
 .file-item.active {
   background-color: rgba(0, 120, 212, 0.1);
   color: var(--primary);
-}
-
-.file-item-icon {
-  margin-right: var(--spacing-sm);
-  font-size: var(--font-size-base);
-  width: 20px;
-  text-align: center;
 }
 
 .file-item-name {
@@ -201,15 +231,6 @@
   margin-left: var(--spacing-lg);
   border-left: 1px solid var(--border);
   padding-left: var(--spacing-sm);
-}
-
-.folder-toggle {
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-
-.folder-toggle.expanded {
-  transform: rotate(90deg);
 }
 
 /* Hide file names when sidebar is collapsed */

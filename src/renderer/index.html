@@ -9,6 +9,48 @@
   <link rel="stylesheet" href="styles/sidebar.css">
   <link rel="stylesheet" href="styles/workspace.css">
   <link rel="stylesheet" href="styles/chat.css">
+  <link rel="stylesheet" href="styles/markdown.css">
+  <link rel="stylesheet" href="../node_modules/highlight.js/styles/github.css">
+  <style>
+    /* Reset default browser styles */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    /* Ensure React root takes full space */
+    #react-root {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Make sure our React app has proper layout */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+    
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    /* Dark mode for syntax highlighting */
+    @media (prefers-color-scheme: dark) {
+      pre code.hljs {
+        background-color: #282c34;
+        color: #abb2bf;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="react-root"></div>

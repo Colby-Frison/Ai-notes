@@ -1,8 +1,8 @@
 /**
  * AI Notes - Main Application Script
  * 
- * This is the entry point for the renderer process, handling UI interactions,
- * file operations, and sidebar functionality.
+ * IMPORTANT: This file is being phased out in favor of the React implementation.
+ * It's kept for backward compatibility during the transition.
  */
 
 // Import modules
@@ -12,38 +12,89 @@ import { SettingsManager } from './settings-manager.js';
 import { ThemeManager } from './theme-manager.js';
 import { ChatManager } from './chat-manager.js';
 
+// Create a global bridge to the React app
+window.reactBridge = {
+  // This will be populated by the React app
+  fileTree: {
+    setRootDirectory: null,
+    toggleFolder: null,
+    openFile: null
+  },
+  workspace: {
+    openFile: null,
+    closeFile: null
+  }
+};
+
 // Initialize the application when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
-  // Initialize managers
+  console.warn('Legacy JavaScript initialization running alongside React');
+  
+  // Initialize managers but don't let them manipulate the DOM
   const fileTreeManager = new FileTreeManager();
   const workspaceManager = new WorkspaceManager();
   const settingsManager = new SettingsManager();
   const themeManager = new ThemeManager();
   const chatManager = new ChatManager();
   
-  // Set up sidebar interactions
-  setupSidebar();
-  
-  // Load settings and apply theme
-  await settingsManager.loadSettings();
+  // Apply theme immediately
   themeManager.applyTheme(await window.electronAPI.getConfig('theme') || 'system');
   
-  // Check for root directory and initialize file tree
-  initializeFileTree();
-  
-  // Set up event listeners for various UI elements
-  setupEventListeners();
-  
-  // Log initialization complete
-  console.log('Application initialized successfully');
+  // Minimal setup to keep functions working during transition
+  setupMinimalFunctionality();
 });
+
+function setupMinimalFunctionality() {
+  // If React bridge isn't populated, handle this gracefully
+  if (!window.reactBridge.fileTree.setRootDirectory) {
+    window.reactBridge.fileTree.setRootDirectory = async (path) => {
+      console.warn('React bridge not ready: fileTree.setRootDirectory');
+      await window.electronAPI.setConfig('rootDirectory', path);
+    };
+  }
+  
+  if (!window.reactBridge.fileTree.openFile) {
+    window.reactBridge.fileTree.openFile = async (path) => {
+      console.warn('React bridge not ready: fileTree.openFile');
+    };
+  }
+  
+  if (!window.reactBridge.workspace.openFile) {
+    window.reactBridge.workspace.openFile = async (path) => {
+      console.warn('React bridge not ready: workspace.openFile');
+    };
+  }
+}
+
+// Export this function for React components to use
+export function connectReactComponents(reactFileTree, reactWorkspace) {
+  console.log('React components connected to legacy JavaScript');
+  
+  window.reactBridge.fileTree.setRootDirectory = reactFileTree.setRootDirectory;
+  window.reactBridge.fileTree.toggleFolder = reactFileTree.toggleFolder;
+  window.reactBridge.fileTree.openFile = reactFileTree.openFile;
+  
+  window.reactBridge.workspace.openFile = reactWorkspace.openFile;
+  window.reactBridge.workspace.closeFile = reactWorkspace.closeFile;
+}
 
 /**
  * Set up sidebar toggle and navigation
  */
 function setupSidebar() {
   const sidebar = document.getElementById('sidebar');
+  // Check if the sidebar element exists before proceeding
+  if (!sidebar) {
+    console.log('Sidebar element not found - skipping setupSidebar');
+    return;
+  }
+  
   const sidebarToggle = document.getElementById('sidebar-toggle');
+  if (!sidebarToggle) {
+    console.log('Sidebar toggle button not found');
+    return;
+  }
+  
   const sidebarButtons = document.querySelectorAll('.sidebar-btn');
   const sidebarPanels = document.querySelectorAll('.sidebar-panel');
   
@@ -58,59 +109,70 @@ function setupSidebar() {
   
   // Apply saved sidebar state
   window.electronAPI.getConfig('sidebarCollapsed').then(collapsed => {
-    if (collapsed) {
-      sidebar.classList.add('collapsed');
-    } else {
-      sidebar.classList.remove('collapsed');
+    if (sidebar) {
+      if (collapsed) {
+        sidebar.classList.add('collapsed');
+      } else {
+        sidebar.classList.remove('collapsed');
+      }
+      
+      // Force resize event to update layout
+      window.dispatchEvent(new Event('resize'));
     }
-    
-    // Force resize event to update layout
-    window.dispatchEvent(new Event('resize'));
   });
   
   // Switch between sidebar panels
-  sidebarButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      // Get the target panel from data attribute
-      const targetPanelId = button.getAttribute('data-panel');
-      const targetPanel = document.getElementById(targetPanelId);
-      
-      console.log('Clicked sidebar button:', targetPanelId);
-      
-      if (!targetPanel) {
-        console.error('Target panel not found:', targetPanelId);
-        return;
-      }
-      
-      // Remove active class from all buttons and panels
-      sidebarButtons.forEach(btn => btn.classList.remove('active'));
-      sidebarPanels.forEach(panel => panel.classList.remove('active'));
-      
-      // Add active class to the clicked button and target panel
-      button.classList.add('active');
-      targetPanel.classList.add('active');
-      
-      // Save active panel to config
-      window.electronAPI.setConfig('activeSidebarPanel', targetPanelId);
+  if (sidebarButtons.length > 0 && sidebarPanels.length > 0) {
+    sidebarButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Get the target panel from data attribute
+        const targetPanelId = button.getAttribute('data-panel');
+        const targetPanel = document.getElementById(targetPanelId);
+        
+        console.log('Clicked sidebar button:', targetPanelId);
+        
+        if (!targetPanel) {
+          console.error('Target panel not found:', targetPanelId);
+          return;
+        }
+        
+        // Remove active class from all buttons and panels
+        sidebarButtons.forEach(btn => btn.classList.remove('active'));
+        sidebarPanels.forEach(panel => panel.classList.remove('active'));
+        
+        // Add active class to the clicked button and target panel
+        button.classList.add('active');
+        targetPanel.classList.add('active');
+        
+        // Save active panel to config
+        window.electronAPI.setConfig('activeSidebarPanel', targetPanelId);
+      });
     });
-  });
-  
-  // Restore last active panel
-  window.electronAPI.getConfig('activeSidebarPanel').then(activePanelId => {
-    if (activePanelId) {
-      const activeButton = document.querySelector(`.sidebar-btn[data-panel="${activePanelId}"]`);
-      if (activeButton) {
-        console.log('Restoring active panel:', activePanelId);
-        activeButton.click();
+    
+    // Restore last active panel
+    window.electronAPI.getConfig('activeSidebarPanel').then(activePanelId => {
+      if (activePanelId) {
+        const activeButton = document.querySelector(`.sidebar-btn[data-panel="${activePanelId}"]`);
+        if (activeButton) {
+          console.log('Restoring active panel:', activePanelId);
+          activeButton.click();
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 /**
  * Initialize file tree with the saved root directory
  */
 async function initializeFileTree() {
+  // Check if the element exists before proceeding
+  const fileTree = document.getElementById('file-tree');
+  if (!fileTree) {
+    console.log('File tree element not found - skipping initializeFileTree');
+    return;
+  }
+  
   const rootDir = await window.electronAPI.getConfig('rootDirectory');
   
   if (rootDir) {
@@ -123,7 +185,6 @@ async function initializeFileTree() {
     }
   } else {
     // No root directory set, show empty state
-    const fileTree = document.getElementById('file-tree');
     fileTree.innerHTML = `
       <div class="empty-state">
         <p>No folder selected</p>
@@ -135,6 +196,8 @@ async function initializeFileTree() {
   // Set up select directory buttons
   const selectRootDirButtons = document.querySelectorAll('#select-root-dir, #welcome-select-dir');
   selectRootDirButtons.forEach(button => {
+    if (!button) return;
+    
     button.addEventListener('click', async () => {
       try {
         const result = await window.electronAPI.openDirectory();
@@ -169,7 +232,17 @@ function setupEventListeners() {
  */
 function setupSettingsModal() {
   const settingsBtn = document.getElementById('open-settings-modal');
+  if (!settingsBtn) {
+    console.log('Settings button not found - skipping setupSettingsModal');
+    return;
+  }
+  
   const settingsModal = document.getElementById('settings-modal');
+  if (!settingsModal) {
+    console.log('Settings modal not found');
+    return;
+  }
+  
   const closeSettings = document.getElementById('close-settings');
   const saveSettings = document.getElementById('settings-save');
   const applySettings = document.getElementById('settings-apply');
@@ -191,36 +264,46 @@ function setupSettingsModal() {
     settingsModal.classList.remove('active');
   };
   
-  closeSettings.addEventListener('click', closeModal);
-  cancelSettings.addEventListener('click', closeModal);
+  if (closeSettings) closeSettings.addEventListener('click', closeModal);
+  if (cancelSettings) cancelSettings.addEventListener('click', closeModal);
   
   // Save settings
-  saveSettings.addEventListener('click', () => {
-    const settingsManager = new SettingsManager();
-    settingsManager.saveSettings();
-    closeModal();
-  });
+  if (saveSettings) {
+    saveSettings.addEventListener('click', () => {
+      const settingsManager = new SettingsManager();
+      settingsManager.saveSettings();
+      closeModal();
+    });
+  }
   
   // Apply settings without closing
-  applySettings.addEventListener('click', () => {
-    const settingsManager = new SettingsManager();
-    settingsManager.saveSettings();
-  });
+  if (applySettings) {
+    applySettings.addEventListener('click', () => {
+      const settingsManager = new SettingsManager();
+      settingsManager.saveSettings();
+    });
+  }
   
   // Tab switching
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const target = button.getAttribute('data-tab');
-      
-      // Remove active class from all buttons and panes
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabPanes.forEach(pane => pane.classList.remove('active'));
-      
-      // Add active class to clicked button and target pane
-      button.classList.add('active');
-      document.getElementById(`${target}-settings`).classList.add('active');
+  if (tabButtons.length > 0 && tabPanes.length > 0) {
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.getAttribute('data-tab');
+        if (!target) return;
+        
+        const targetPane = document.getElementById(`${target}-settings`);
+        if (!targetPane) return;
+        
+        // Remove active class from all buttons and panes
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Add active class to clicked button and target pane
+        button.classList.add('active');
+        targetPane.classList.add('active');
+      });
     });
-  });
+  }
   
   // Close modal when clicking outside
   settingsModal.addEventListener('click', (event) => {
@@ -231,9 +314,11 @@ function setupSettingsModal() {
   
   // Prevent propagation from modal content
   const modalContent = settingsModal.querySelector('.modal-content');
-  modalContent.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
+  if (modalContent) {
+    modalContent.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+  }
 }
 
 /**
@@ -241,7 +326,17 @@ function setupSettingsModal() {
  */
 function setupChatInterface() {
   const sendButton = document.getElementById('send-message');
+  if (!sendButton) {
+    console.log('Send message button not found - skipping setupChatInterface');
+    return;
+  }
+  
   const chatInput = document.getElementById('chat-input');
+  if (!chatInput) {
+    console.log('Chat input not found');
+    return;
+  }
+  
   const chatMessages = document.getElementById('chat-messages');
   const clearChatButton = document.getElementById('clear-chat');
   
@@ -259,23 +354,27 @@ function setupChatInterface() {
   });
   
   // Clear chat history
-  clearChatButton.addEventListener('click', () => {
-    const chatManager = new ChatManager();
-    chatManager.clearChatHistory();
-    
-    // Clear UI
-    chatMessages.innerHTML = `
-      <div class="empty-state">
-        <p>Chat cleared</p>
-        <p>Start a new conversation</p>
-      </div>
-    `;
-  });
+  if (clearChatButton && chatMessages) {
+    clearChatButton.addEventListener('click', () => {
+      const chatManager = new ChatManager();
+      chatManager.clearChatHistory();
+      
+      // Clear UI
+      chatMessages.innerHTML = `
+        <div class="empty-state">
+          <p>Chat cleared</p>
+          <p>Start a new conversation</p>
+        </div>
+      `;
+    });
+  }
   
   /**
    * Send a chat message to the AI
    */
   function sendChatMessage() {
+    if (!chatInput) return;
+    
     const message = chatInput.value.trim();
     
     if (message) {

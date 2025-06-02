@@ -27,7 +27,13 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jsx'],
+    alias: {
+      // Add alias for cleaner imports
+      '@components': path.resolve(__dirname, 'src/renderer/react/components'),
+      '@context': path.resolve(__dirname, 'src/renderer/react/context'),
+      '@styles': path.resolve(__dirname, 'src/renderer/react/styles')
+    }
   },
   devtool: 'source-map',
   target: 'electron-renderer'
